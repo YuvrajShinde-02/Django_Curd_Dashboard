@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Leads Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 2rem; }
+        .wrap { max-width: 980px; margin: 0 auto; }
+        .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 24px; }
+        .row { display: flex; gap: 16px; flex-wrap: wrap; }
+        .row > .card { flex: 1 1 420px; }
+        code { background: #f3f4f6; padding: 2px 6px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>Leads Dashboard</h1>
+        <p>Browse API: <code>/api/leads/</code> • Import sample data: POST <code>/api/leads/import_from_jsonplaceholder/</code></p>
+
+        <div class="row">
+            <div class="card">
+                <h3>Leads by Day & Source</h3>
+                <canvas id="leadsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchMetrics() {
+            const res = await fetch('/api/leads/metrics_by_day/');
+            return await res.json();
+        }
+        function groupData(rows) {
+            const byDay = {};
+            const sources = new Set();
+            rows.forEach(r => {
+                const day = r.day;
+                const src = r.source;
+                sources.add(src);
+                if (!byDay[day]) byDay[day] = {};
+                byDay[day][src] = r.count;
+            });
+            const labels = Object.keys(byDay).sort();
+            const srcs = Array.from(sources);
+            const datasets = srcs.map(src => ({
+                label: src,
+                data: labels.map(day => byDay[day][src] || 0),
+                borderWidth: 2,
+                fill: false,
+                tension: 0.2
+            }));
+            return { labels, datasets };
+        }
+        (async () => {
+            const rows = await fetchMetrics();
+            const ctx = document.getElementById('leadsChart').getContext('2d');
+            const data = groupData(rows);
+            new Chart(ctx, {
+                type: 'line',
+                data,
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        x: { title: { display: true, text: 'Day' } },
+                        y: { title: { display: true, text: 'Leads' }, beginAtZero: true, precision: 0 }
+                    }
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
