@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-e&ym279=2h62i)cn=rp^6)ry53jj5%e$wwyk@ak!&iuv1o+$*^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -91,7 +91,9 @@ ASGI_APPLICATION = 'simplecrm.asgi.application'
 # }
 DATABASES = {
     "default": dj_database_url.config(
-        default=os.getenv("DATABASE_URL")
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True,   # Force SSL for Render PostgreSQL
     )
 }
 
@@ -131,7 +133,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
